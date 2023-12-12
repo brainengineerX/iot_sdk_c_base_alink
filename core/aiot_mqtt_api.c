@@ -588,15 +588,9 @@ static int32_t _core_mqtt_connect(core_mqtt_handle_t *mqtt_handle)
 
     if (mqtt_handle->username == NULL || mqtt_handle->password == NULL ||
         mqtt_handle->clientid == NULL) {
-        /* no valid username, password or clientid, check pk/dn/ds */
-        if (mqtt_handle->product_key == NULL) {
-            return STATE_USER_INPUT_MISSING_PRODUCT_KEY;
-        }
+
         if (mqtt_handle->device_name == NULL) {
             return STATE_USER_INPUT_MISSING_DEVICE_NAME;
-        }
-        if (mqtt_handle->device_secret == NULL) {
-            return STATE_USER_INPUT_MISSING_DEVICE_SECRET;
         }
         _core_mqtt_sign_clean(mqtt_handle);
 

@@ -8,6 +8,7 @@ extern "C" {
 #include "core_stdinc.h"
 #include "core_string.h"
 #include "core_sha256.h"
+#include "md5.h"
 #include "aiot_state_api.h"
 #include "aiot_sysdep_api.h"
 

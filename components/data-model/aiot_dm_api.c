@@ -31,7 +31,7 @@ static void _dm_recv_up_raw_reply_data_handler(void *handle, const aiot_mqtt_rec
 
 static const dm_send_topic_map_t g_dm_send_topic_mapping[AIOT_DMMSG_MAX] = {
     {
-        "/sys/%s/%s/thing/event/property/post",
+        "/v1/devices/down/set/%s",
         _dm_send_property_post
     },
     {
@@ -150,7 +150,6 @@ static int32_t _dm_prepare_send_topic(dm_handle_t *dm_handle, const aiot_dm_msg_
 {
     char *src[4];
     uint8_t src_count = 0;
-    char *pk = NULL;
     char *dn = NULL;
 
     if (NULL == msg->product_key && NULL == core_mqtt_get_product_key(dm_handle->mqtt_handle)) {
@@ -160,7 +159,6 @@ static int32_t _dm_prepare_send_topic(dm_handle_t *dm_handle, const aiot_dm_msg_
         return STATE_USER_INPUT_MISSING_DEVICE_NAME;
     }
 
-    pk = (msg->product_key != NULL) ? msg->product_key : core_mqtt_get_product_key(dm_handle->mqtt_handle);
     dn = (msg->device_name != NULL) ? msg->device_name : core_mqtt_get_device_name(dm_handle->mqtt_handle);
 
     switch (msg->type) {
@@ -170,29 +168,26 @@ static int32_t _dm_prepare_send_topic(dm_handle_t *dm_handle, const aiot_dm_msg_
         case AIOT_DMMSG_GET_DESIRED:
         case AIOT_DMMSG_DELETE_DESIRED:
         case AIOT_DMMSG_RAW_DATA: {
-            src[0] = pk;
-            src[1] = dn;
-            src_count = 2;
+            src[0] = dn;
+            src_count = 1;
         }
         break;
         case AIOT_DMMSG_EVENT_POST: {
             if (msg->data.event_post.event_id == NULL) {
                 return STATE_DM_EVENT_ID_IS_NULL;
             }
-            src[0] = pk;
-            src[1] = dn;
-            src[2] = msg->data.event_post.event_id;
-            src_count = 3;
+            src[0] = dn;
+            src[1] = msg->data.event_post.event_id;
+            src_count = 2;
         }
         break;
         case AIOT_DMMSG_ASYNC_SERVICE_REPLY: {
             if (msg->data.async_service_reply.service_id == NULL) {
                 return STATE_DM_SERVICE_ID_IS_NULL;
             }
-            src[0] = pk;
-            src[1] = dn;
-            src[2] = msg->data.async_service_reply.service_id;
-            src_count = 3;
+            src[0] = dn;
+            src[1] = msg->data.async_service_reply.service_id;
+            src_count = 2;
         }
         break;
         case AIOT_DMMSG_SYNC_SERVICE_REPLY: {
@@ -203,10 +198,9 @@ static int32_t _dm_prepare_send_topic(dm_handle_t *dm_handle, const aiot_dm_msg_
                 return STATE_DM_SERVICE_ID_IS_NULL;
             }
             src[0] = msg->data.sync_service_reply.rrpc_id;
-            src[1] = pk;
-            src[2] = dn;
-            src[3] = msg->data.sync_service_reply.service_id;
-            src_count = 4;
+            src[1] = dn;
+            src[2] = msg->data.sync_service_reply.service_id;
+            src_count = 3;
         }
         break;
         case AIOT_DMMSG_RAW_SERVICE_REPLY: {
@@ -214,9 +208,8 @@ static int32_t _dm_prepare_send_topic(dm_handle_t *dm_handle, const aiot_dm_msg_
                 return STATE_DM_RRPC_ID_IS_NULL;
             }
             src[0] = msg->data.raw_service_reply.rrpc_id;
-            src[1] = pk;
-            src[2] = dn;
-            src_count = 3;
+            src[1] = dn;
+            src_count = 2;
         }
         break;
         default:
