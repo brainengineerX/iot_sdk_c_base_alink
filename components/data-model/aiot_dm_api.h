@@ -217,6 +217,45 @@ typedef struct {
     char *params;
 } aiot_dm_msg_property_post_t;
 
+typedef struct {
+    /**
+     * @brief 字符串形式的JSON结构体, <b>必须以结束符'\0'结尾</b>. 包含用户请求时间<i></i>
+     */
+    char *time;
+} aiot_xjtdm_msg_get_reg_post_t;
+
+/**
+ * @brief <b>物模型事件上报</b>消息结构体
+ */
+typedef struct {
+    /**
+     * @brief 时间
+     */
+    char *time;
+    /**
+     * @brief 事件标示符, <b>必须为以结束符'\0'结尾的字符串</b>
+     */
+    char *event_id;
+    /**
+     * @brief 字符串形式的JSON结构体, <b>必须以结束符'\0'结尾</b>. 包含用户要上报的事件数据, 如<i>"{\"ErrorNum\":0}"</i>
+     */
+    char *params;
+} aiot_xjtdm_msg_event_post_t;
+/**
+ * @brief <b>二进制格式的同步服务应答</b>消息结构体, 用户在收到@ref AIOT_DMRECV_RAW_SYNC_SERVICE_INVOKE 类型消息后, 应在超时时间(默认7s)内进行应答\n
+ * 
+ */
+typedef struct {
+    /**
+     * @brief 事件标示符, <b>必须为以结束符'\0'结尾的字符串</b>
+     */
+    char *code;
+    /**
+     * @brief 字符串形式的JSON结构体, <b>必须以结束符'\0'结尾</b>. 包含用户要上报的事件数据, 如<i>"{\"ErrorNum\":0}"</i>
+     */
+    char *params;
+} aiot_xjtdm_msg_service_reply_t;
+
 /**
  * @brief <b>物模型事件上报</b>消息结构体
  */
@@ -394,6 +433,12 @@ typedef struct {
         aiot_dm_msg_raw_service_reply_t     raw_service_reply;
         aiot_dm_msg_get_desired_t           get_desired;
         aiot_dm_msg_delete_desired_t        delete_desired;
+
+        /* XJT物模型接口 */
+        aiot_xjtdm_msg_get_reg_post_t       get_reg_post;
+        aiot_xjtdm_msg_event_post_t         xjt_event_post;
+        aiot_xjtdm_msg_service_reply_t      xjt_service_rep;
+
     } data;
 } aiot_dm_msg_t;
 

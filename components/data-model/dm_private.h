@@ -31,6 +31,12 @@ extern "C" {
 
 /* ALINK请求的JSON格式 */
 #define ALINK_REQUEST_FMT               "{\"id\":\"%s\",\"version\":\"1.0\",\"params\":%s,\"sys\":{\"ack\":%s}}"
+
+#define XJT_GET_DEVICE                  "{\"id\":\"%s\",\"eventTime\":,\"%s\"}"
+#define XJT_PROP_POST                   "{\"id\":\"%s\",\"devices\":[%s]}"
+#define XJT_EVENT_POST                  "{\"id\":\"%s\",\"time\":\"%s\",\"identifier\":\"%s\",\"data\":%s}"
+#define XJT_SERVICE_REPLY                 "{\"id\":\"%s\",\"code\":\"%s\",\"message\":\"%s\"}"
+
 /* ALINK应答的JSON格式 */
 #define ALINK_RESPONSE_FMT              "{\"id\":\"%s\",\"code\":%s,\"data\":%s}"
 #define ALINK_JSON_KEY_ID               "id"
