@@ -11,6 +11,7 @@
 
 
 static int32_t _dm_send_property_post(dm_handle_t *handle, const char *topic, const aiot_dm_msg_t *msg);
+static int32_t _dm_send_get_reg_post(dm_handle_t *handle, const char *topic, const aiot_dm_msg_t *msg);
 static int32_t _dm_send_event_post(dm_handle_t *handle, const char *topic, const aiot_dm_msg_t *msg);
 static int32_t _dm_send_property_set_reply(dm_handle_t *handle, const char *topic, const aiot_dm_msg_t *msg);
 static int32_t _dm_send_async_service_reply(dm_handle_t *handle, const char *topic, const aiot_dm_msg_t *msg);
@@ -31,33 +32,43 @@ static void _dm_recv_up_raw_reply_data_handler(void *handle, const aiot_mqtt_rec
 
 static const dm_send_topic_map_t g_dm_send_topic_mapping[AIOT_DMMSG_MAX] = {
     {
-        "/v1/devices/down/set/%s",
+        "/v1/devices/up/getDeviceInfo/%s",
+        _dm_send_get_reg_post
+    },
+    {
+        "/v1/devices/up/datas/%s",
         _dm_send_property_post
     },
     {
-        "/sys/%s/%s/thing/event/%s/post",
+        "/v1/devices/up/event/%s",
         _dm_send_event_post
     },
     {
-        "/sys/%s/%s/thing/service/property/set_reply",
+        "/v1/devices/up/set_reply/%s",
         _dm_send_property_set_reply
     },
     {
-        "/sys/%s/%s/thing/service/%s_reply",
+        "/v1/devices/up/service_reply/%s",
         _dm_send_async_service_reply
     },
     {
-        "/ext/rrpc/%s/sys/%s/%s/thing/service/%s",
+        "/v1/devices/up/service_reply/%s",
         _dm_send_sync_service_reply
     },
+    /* 暂不需要二进制上报*/
+    /*
     {
         "/sys/%s/%s/thing/model/up_raw",
         _dm_send_raw_data
     },
+    
     {
         "/ext/rrpc/%s/sys/%s/%s/thing/model/down_raw",
         _dm_send_raw_service_reply
     },
+    */
+   /* 暂不需要设备影子*/
+   /*
     {
         "/sys/%s/%s/thing/property/desired/get",
         _dm_send_desired_get
@@ -66,51 +77,28 @@ static const dm_send_topic_map_t g_dm_send_topic_mapping[AIOT_DMMSG_MAX] = {
         "/sys/%s/%s/thing/property/desired/delete",
         _dm_send_desired_delete
     },
+    */
     {
-        "/sys/%s/%s/thing/event/property/batch/post",
+        "/v1/devices/up/datas/%s",
         _dm_send_property_batch_post
     },
 };
 
 static const dm_recv_topic_map_t g_dm_recv_topic_mapping[] = {
     {
-        "/sys/+/+/thing/event/+/post_reply",
+        "/v1/devices/down/registerInfo/%s",
         _dm_recv_generic_reply_handler,
     },
     {
-        "/sys/+/+/thing/service/property/set",
+        "/v1/devices/down/set/%s",
         _dm_recv_property_set_handler,
     },
     {
-        "/sys/+/+/thing/service/+",
+        "/v1/devices/down/service/%s",
         _dm_recv_async_service_invoke_handler,
     },
     {
-        "/ext/rrpc/+/sys/+/+/thing/service/+",
-        _dm_recv_sync_service_invoke_handler,
-    },
-    {
-        "/sys/+/+/thing/model/down_raw",
-        _dm_recv_raw_data_handler,
-    },
-    {
-        "/sys/+/+/thing/model/up_raw_reply",
-        _dm_recv_up_raw_reply_data_handler,
-    },
-    {
-        "/ext/rrpc/+/sys/+/+/thing/model/down_raw",
-        _dm_recv_raw_sync_service_invoke_handler,
-    },
-    {
-        "/sys/+/+/thing/property/desired/get_reply",
-        _dm_recv_generic_reply_handler,
-    },
-    {
-        "/sys/+/+/thing/property/desired/delete_reply",
-        _dm_recv_generic_reply_handler,
-    },
-    {
-        "/sys/+/+/thing/event/property/batch/post_reply",
+        "/v1/devices/down/event_reply/%s",
         _dm_recv_generic_reply_handler,
     },
 };
@@ -131,10 +119,21 @@ static int32_t _dm_setup_topic_mapping(void *mqtt_handle, void *dm_handle)
 {
     uint32_t i = 0;
     int32_t res = STATE_SUCCESS;
+    char *src[1];
+    uint8_t src_count = 0;
+    char *dn = NULL;
+    if (NULL == core_mqtt_get_device_name(dm_handle->mqtt_handle)) {
+        return STATE_USER_INPUT_MISSING_DEVICE_NAME;
+    }
+
+    dn = core_mqtt_get_device_name(dm_handle->mqtt_handle);
+    src[0] = dn;
+    src_count = 1;
 
     for (i = 0; i < sizeof(g_dm_recv_topic_mapping) / sizeof(dm_recv_topic_map_t); i++) {
         aiot_mqtt_topic_map_t topic_mapping;
-        topic_mapping.topic = g_dm_recv_topic_mapping[i].topic;
+        core_sprintf(dm_handle->sysdep, topic_mapping.topic, g_dm_recv_topic_mapping[i].topic, src, src_count,
+                        DATA_MODEL_MODULE_NAME)
         topic_mapping.handler = g_dm_recv_topic_mapping[i].func;
         topic_mapping.userdata = dm_handle;
 
@@ -152,9 +151,6 @@ static int32_t _dm_prepare_send_topic(dm_handle_t *dm_handle, const aiot_dm_msg_
     uint8_t src_count = 0;
     char *dn = NULL;
 
-    if (NULL == msg->product_key && NULL == core_mqtt_get_product_key(dm_handle->mqtt_handle)) {
-        return STATE_USER_INPUT_MISSING_PRODUCT_KEY;
-    }
     if (NULL == msg->device_name && NULL == core_mqtt_get_device_name(dm_handle->mqtt_handle)) {
         return STATE_USER_INPUT_MISSING_DEVICE_NAME;
     }
@@ -177,8 +173,7 @@ static int32_t _dm_prepare_send_topic(dm_handle_t *dm_handle, const aiot_dm_msg_
                 return STATE_DM_EVENT_ID_IS_NULL;
             }
             src[0] = dn;
-            src[1] = msg->data.event_post.event_id;
-            src_count = 2;
+            src_count = 1;
         }
         break;
         case AIOT_DMMSG_ASYNC_SERVICE_REPLY: {
@@ -186,8 +181,7 @@ static int32_t _dm_prepare_send_topic(dm_handle_t *dm_handle, const aiot_dm_msg_
                 return STATE_DM_SERVICE_ID_IS_NULL;
             }
             src[0] = dn;
-            src[1] = msg->data.async_service_reply.service_id;
-            src_count = 2;
+            src_count = 1;
         }
         break;
         case AIOT_DMMSG_SYNC_SERVICE_REPLY: {
@@ -197,19 +191,16 @@ static int32_t _dm_prepare_send_topic(dm_handle_t *dm_handle, const aiot_dm_msg_
             if (msg->data.sync_service_reply.service_id == NULL) {
                 return STATE_DM_SERVICE_ID_IS_NULL;
             }
-            src[0] = msg->data.sync_service_reply.rrpc_id;
-            src[1] = dn;
-            src[2] = msg->data.sync_service_reply.service_id;
-            src_count = 3;
+            src[0] = dn;
+            src_count = 1;
         }
         break;
         case AIOT_DMMSG_RAW_SERVICE_REPLY: {
             if (msg->data.raw_service_reply.rrpc_id == NULL) {
                 return STATE_DM_RRPC_ID_IS_NULL;
             }
-            src[0] = msg->data.raw_service_reply.rrpc_id;
-            src[1] = dn;
-            src_count = 2;
+            src[0] = dn;
+            src_count = 1;
         }
         break;
         default:
@@ -290,6 +281,11 @@ static int32_t _dm_send_alink_rsp(dm_handle_t *handle, const char *topic, uint64
 }
 
 /*** dm send function start ***/
+static int32_t _dm_send_get_reg_post(dm_handle_t *handle, const char *topic, const aiot_dm_msg_t *msg)
+{
+    return _dm_send_alink_req(handle, topic, msg->data.property_post.params);
+}
+
 static int32_t _dm_send_property_post(dm_handle_t *handle, const char *topic, const aiot_dm_msg_t *msg)
 {
     return _dm_send_alink_req(handle, topic, msg->data.property_post.params);

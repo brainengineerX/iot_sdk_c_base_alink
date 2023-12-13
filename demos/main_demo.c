@@ -157,7 +157,7 @@ static void demo_dm_recv_async_service_invoke(void *dm_handle, const aiot_dm_rec
         * 注意: 如果用户在回调函数外进行应答, 需要自行保存msg_id, 因为回调函数入参在退出回调函数后将被SDK销毁, 不可以再访问到
         */
 
-    /*
+    
     {
         aiot_dm_msg_t msg;
 
@@ -172,7 +172,7 @@ static void demo_dm_recv_async_service_invoke(void *dm_handle, const aiot_dm_rec
             printf("aiot_dm_send failed\r\n");
         }
     }
-    */
+    
 }
 static void demo_dm_recv_sync_service_invoke(void *dm_handle, const aiot_dm_recv_t *recv, void *userdata)
 {
@@ -188,7 +188,7 @@ static void demo_dm_recv_sync_service_invoke(void *dm_handle, const aiot_dm_recv
         * 注意: 如果用户在回调函数外进行应答, 需要自行保存msg_id和rrpc_id字符串, 因为回调函数入参在退出回调函数后将被SDK销毁, 不可以再访问到
         */
 
-    /*
+    
     {
         aiot_dm_msg_t msg;
 
@@ -204,7 +204,7 @@ static void demo_dm_recv_sync_service_invoke(void *dm_handle, const aiot_dm_recv
             printf("aiot_dm_send failed\r\n");
         }
     }
-    */
+    
 }
 
 static void demo_dm_recv_raw_data(void *dm_handle, const aiot_dm_recv_t *recv, void *userdata)
