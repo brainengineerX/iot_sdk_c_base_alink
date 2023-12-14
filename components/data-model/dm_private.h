@@ -55,7 +55,8 @@ extern "C" {
 #define XJT_JSON_KEY_PARAMS             "params"
 #define XJT_JSON_KEY_IDENTIFIER         "identifier"
 #define XJT_JSON_KEY_DATA               "data"
-
+#define XJT_JSON_KEY_CODE               "code"
+#define XJT_JSON_KEY_MSG                "message"
 /* 诊断消息类型 */
 #define DM_DIAG_MSG_TYPE_REQ            (0x00)
 #define DM_DIAG_MSG_TYPE_RSP            (0x01)

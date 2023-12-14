@@ -548,21 +548,16 @@ static void _dm_recv_generic_reply_handler(void *handle, const aiot_mqtt_recv_t 
     core_log(dm_handle->sysdep, STATE_DM_LOG_RECV, "DM recv generic reply\r\n");
 
     do {
-        if (_dm_get_topic_level(dm_handle->sysdep, msg->data.pub.topic, msg->data.pub.topic_len, 2, &recv.product_key) < 0 ||
-            _dm_get_topic_level(dm_handle->sysdep, msg->data.pub.topic, msg->data.pub.topic_len, 3, &recv.device_name) < 0) {
+        if (_dm_get_topic_level(dm_handle->sysdep, msg->data.pub.topic, msg->data.pub.topic_len, 5, &recv.device_name) < 0) {
             break;  /* must be malloc failed */
         }
 
         if ((core_json_value((char *)msg->data.pub.payload, msg->data.pub.payload_len,
-                                   ALINK_JSON_KEY_ID, strlen(ALINK_JSON_KEY_ID), &value, &value_len)) < 0 ||
+                                   XJT_JSON_KEY_ID, strlen(XJT_JSON_KEY_ID), &value, &value_len)) < 0 ||
             (core_str2uint(value, value_len, &recv.data.generic_reply.msg_id)) < 0 ||
             (core_json_value((char *)msg->data.pub.payload, msg->data.pub.payload_len,
-                                   ALINK_JSON_KEY_CODE, strlen(ALINK_JSON_KEY_CODE), &value, &value_len)) < 0 ||
-            (core_str2uint(value, value_len, &recv.data.generic_reply.code)) < 0 ||
-            (core_json_value((char *)msg->data.pub.payload, msg->data.pub.payload_len,
-                                   ALINK_JSON_KEY_DATA, strlen(ALINK_JSON_KEY_DATA),
-                                   &recv.data.generic_reply.data,
-                                   &recv.data.generic_reply.data_len)) < 0) {
+                                   XJT_JSON_KEY_CODE, strlen(XJT_JSON_KEY_CODE), &value, &value_len)) < 0 ||
+            (core_str2uint(value, value_len, &recv.data.generic_reply.code)) < 0) {
 
             core_log(dm_handle->sysdep, SATAE_DM_LOG_PARSE_RECV_MSG_FAILED, "DM parse generic reply failed\r\n");
             break;
@@ -581,7 +576,6 @@ static void _dm_recv_generic_reply_handler(void *handle, const aiot_mqtt_recv_t 
         dm_handle->recv_handler(dm_handle, &recv, dm_handle->userdata);
     } while (0);
 
-    DM_FREE(recv.product_key);
     DM_FREE(recv.device_name);
 }
 
@@ -619,6 +613,8 @@ static void _dm_recv_property_set_handler(void *handle, const aiot_mqtt_recv_t *
     } while (0);
 
     DM_FREE(recv.device_name);
+    DM_FREE(recv.data.xjt_property.serviceId);
+    DM_FREE(recv.data.xjt_property.eid);
 }
 
 static void _dm_recv_async_service_invoke_handler(void *handle, const aiot_mqtt_recv_t *msg, void *userdata)
@@ -653,7 +649,7 @@ static void _dm_recv_async_service_invoke_handler(void *handle, const aiot_mqtt_
     } while (0);
 
     DM_FREE(recv.device_name);
-    DM_FREE(recv.data.async_service_invoke.service_id);
+    DM_FREE(recv.data.service_down.identifier);
 }
 
 
