@@ -25,6 +25,7 @@ extern "C" {
 #include "aiot_state_api.h"
 #include "aiot_mqtt_api.h"
 #include "aiot_dm_api.h"
+#include "cJSON.h"
 
 /* 模块内部名 */
 #define DATA_MODEL_MODULE_NAME          "dm"
@@ -32,6 +33,7 @@ extern "C" {
 /* ALINK请求的JSON格式 */
 #define ALINK_REQUEST_FMT               "{\"id\":\"%s\",\"version\":\"1.0\",\"params\":%s,\"sys\":{\"ack\":%s}}"
 
+/*XJT请求的格式*/
 #define XJT_GET_DEVICE                  "{\"id\":\"%s\",\"eventTime\":,\"%s\"}"
 #define XJT_PROP_POST                   "{\"id\":\"%s\",\"devices\":[%s]}"
 #define XJT_EVENT_POST                  "{\"id\":\"%s\",\"time\":\"%s\",\"identifier\":\"%s\",\"data\":%s}"
@@ -44,6 +46,10 @@ extern "C" {
 #define ALINK_JSON_KEY_PARAMS           "params"
 #define ALINK_JSON_KEY_DATA             "data"
 #define ALINK_JSON_KEY_MESSAGE          "message"
+
+/*XJT响应格式*/
+#define XJT_JSON_KEY_ID                 "id"
+#define XJT_JSON_KEY_DEV_INFO           "deviceInfos"
 
 /* 诊断消息类型 */
 #define DM_DIAG_MSG_TYPE_REQ            (0x00)

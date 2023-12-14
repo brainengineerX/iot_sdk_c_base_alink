@@ -489,6 +489,16 @@ typedef enum {
     AIOT_DMRECV_RAW_SYNC_SERVICE_INVOKE,
 
     /**
+     * @brief 上报注册信息后，平台回复的注册信息帧
+     */
+    AIOT_DMRECV_REGISTER_INFO,
+
+    /**
+     * @brief 上报事件后，平台响应的事件上报帧
+     */
+    AIOT_DMRECV_EV_REP_INFO,
+
+    /**
      * @brief 消息数量最大值, 不可用作消息类型
      */
     AIOT_DMRECV_MAX,
@@ -623,6 +633,24 @@ typedef struct {
 } aiot_dm_recv_raw_service_invoke_t;
 
 /**
+ * @brief <b>注册消息</b>消息结构体
+ */
+typedef struct {
+    /**
+     * @brief 消息标识符, uint64_t类型的整数
+     */
+    uint32_t    msg_id;
+    /**
+     * @brief 服务器下发的注册数据, 为字符串形式的JSON结构体, 此字符串<b>不</b>以结束符'\0'结尾
+     */
+    char       *params;
+    /**
+     * @brief 属性数据的字符串长度
+     */
+    uint32_t    params_len;
+} aiot_dm_recv_register_t;
+
+/**
  * @brief data-model模块接收消息的结构体
  */
 typedef struct {
@@ -648,6 +676,10 @@ typedef struct {
         aiot_dm_recv_sync_service_invoke_t  sync_service_invoke;
         aiot_dm_recv_raw_data_t             raw_data;
         aiot_dm_recv_raw_service_invoke_t   raw_service_invoke;
+
+        aiot_dm_recv_register_t             register_info;
+        
+
     } data;
 } aiot_dm_recv_t;
 

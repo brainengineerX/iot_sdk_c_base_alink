@@ -16,7 +16,7 @@ static int32_t _dm_send_event_post(dm_handle_t *handle, const char *topic, const
 static int32_t _dm_send_service_reply(dm_handle_t *handle, const char *topic, const aiot_dm_msg_t *msg);
 static int32_t _dm_send_property_set_reply(dm_handle_t *handle, const char *topic, const aiot_dm_msg_t *msg);
 static int32_t _dm_send_property_batch_post(dm_handle_t *handle, const char *topic, const aiot_dm_msg_t *msg);
-
+static void _dm_recv_register_handler(void *handle, const aiot_mqtt_recv_t *msg, void *userdata);
 static void _dm_recv_generic_reply_handler(void *handle, const aiot_mqtt_recv_t *msg, void *userdata);
 static void _dm_recv_property_set_handler(void *handle, const aiot_mqtt_recv_t *msg, void *userdata);
 static void _dm_recv_async_service_invoke_handler(void *handle, const aiot_mqtt_recv_t *msg, void *userdata);
@@ -51,7 +51,7 @@ static const dm_send_topic_map_t g_dm_send_topic_mapping[AIOT_DMMSG_MAX] = {
 static const dm_recv_topic_map_t g_dm_recv_topic_mapping[] = {
     {
         "/v1/device/down/registerInfo/%s",
-        _dm_recv_generic_reply_handler,
+        _dm_recv_register_handler,
     },
     {
         "/v1/device/down/set/%s",
@@ -437,6 +437,53 @@ static int32_t _dm_parse_alink_request(const char *payload, uint32_t payload_len
     *params_len = value_len;
 
     return res;
+}
+
+static void _dm_recv_register_handler(void *handle, const aiot_mqtt_recv_t *msg, void *userdata)
+{
+    dm_handle_t *dm_handle = (dm_handle_t *)userdata;
+    aiot_dm_recv_t recv;
+    char *value = NULL;
+    uint32_t value_len = 0;
+    int32_t res = STATE_SUCCESS;
+
+    if (NULL == dm_handle->recv_handler) {
+        return;
+    }
+
+    /* construct recv message */
+    memset(&recv, 0, sizeof(aiot_dm_recv_t));
+    recv.type = AIOT_DMRECV_REGISTER_INFO;
+
+    core_log(dm_handle->sysdep, STATE_DM_LOG_RECV, "DM recv generic reply\r\n");
+
+    do {
+        if (_dm_get_topic_level(dm_handle->sysdep, msg->data.pub.topic, msg->data.pub.topic_len, 5, &recv.device_name) < 0) {
+            break;  /* must be malloc failed */
+        }
+
+        if ((core_json_value((char *)msg->data.pub.payload, msg->data.pub.payload_len,
+                                   XJT_JSON_KEY_ID, strlen(XJT_JSON_KEY_ID), &value, &value_len)) < 0 ||
+            (core_str2uint(value, value_len, &recv.data.register_info.msg_id)) < 0) {
+
+            core_log(dm_handle->sysdep, SATAE_DM_LOG_PARSE_RECV_MSG_FAILED, "DM parse generic reply failed\r\n");
+            break;
+        }
+
+        res = core_json_value((char *)msg->data.pub.payload, msg->data.pub.payload_len,
+                        XJT_JSON_KEY_DEV_INFO, strlen(XJT_JSON_KEY_DEV_INFO),
+                        &recv.data.register_info.params,
+                        &recv.data.register_info.params_len);
+        if(res != STATE_SUCCESS) {
+            recv.data.register_info.params = NULL;
+            recv.data.register_info.params_len = 0;
+        }
+
+        _append_diag_data(dm_handle, DM_DIAG_MSG_TYPE_RSP, recv.data.register_info.msg_id);
+        dm_handle->recv_handler(dm_handle, &recv, dm_handle->userdata);
+    } while (0);
+
+    DM_FREE(recv.device_name);
 }
 
 static void _dm_recv_generic_reply_handler(void *handle, const aiot_mqtt_recv_t *msg, void *userdata)
