@@ -439,6 +439,42 @@ static int32_t _dm_parse_alink_request(const char *payload, uint32_t payload_len
     return res;
 }
 
+static int32_t _dm_parse_xjt_request(const char *payload, uint32_t payload_len, uint64_t *msg_id,char **se_id,char ** eid, char **params,
+                                       uint32_t *params_len)
+{
+    char *value = NULL;
+    uint32_t value_len = 0;
+    int32_t res = STATE_SUCCESS;
+
+    if ((res = core_json_value((char *)payload, payload_len, XJT_JSON_KEY_ID, strlen(XJT_JSON_KEY_ID),
+                               &value, &value_len)) < 0 ||
+        ((res = core_str2uint64(value, value_len, msg_id)) < 0)) {
+        return res;
+    }
+
+    if ((res = core_json_value((char *)payload, payload_len, XJT_JSON_KEY_SERVICE_ID, strlen(XJT_JSON_KEY_SERVICE_ID),
+                               &value, &value_len)) < 0) {
+        return res;
+    }
+    *se_id = value;
+
+    if ((res = core_json_value((char *)payload, payload_len, XJT_JSON_KEY_EID, strlen(XJT_JSON_KEY_EID),
+                               &value, &value_len)) < 0) {
+        return res;
+    }
+    *eid = value;
+
+    if ((res = core_json_value((char *)payload, payload_len, XJT_JSON_KEY_PARAMS, strlen(XJT_JSON_KEY_PARAMS),
+                               &value, &value_len)) < 0) {
+        return res;
+    }
+
+    *params = value;
+    *params_len = value_len;
+
+    return res;
+}
+
 static void _dm_recv_register_handler(void *handle, const aiot_mqtt_recv_t *msg, void *userdata)
 {
     dm_handle_t *dm_handle = (dm_handle_t *)userdata;
@@ -562,10 +598,12 @@ static void _dm_recv_property_set_handler(void *handle, const aiot_mqtt_recv_t *
             break;     /* must be malloc failed */
         }
 
-        if ((_dm_parse_alink_request((char *)msg->data.pub.payload, msg->data.pub.payload_len,
-                                           &recv.data.property_set.msg_id,
-                                           &recv.data.property_set.params,
-                                           &recv.data.property_set.params_len)) < 0) {
+        if ((_dm_parse_xjt_request((char *)msg->data.pub.payload, msg->data.pub.payload_len,
+                                           &recv.data.xjt_property.msg_id,
+                                           &recv.data.xjt_property.serviceId,
+                                           &recv.data.xjt_property.eid,
+                                           &recv.data.xjt_property.params,
+                                           &recv.data.xjt_property.params_len)) < 0) {
 
             core_log(dm_handle->sysdep, SATAE_DM_LOG_PARSE_RECV_MSG_FAILED, "DM parse property set failed\r\n");
             break;
@@ -591,16 +629,13 @@ static void _dm_recv_async_service_invoke_handler(void *handle, const aiot_mqtt_
     core_log(dm_handle->sysdep, STATE_DM_LOG_RECV, "DM recv async service invoke\r\n");
 
     do {
-        if (_dm_get_topic_level(dm_handle->sysdep, msg->data.pub.topic, msg->data.pub.topic_len, 2, &recv.product_key) < 0 ||
-            _dm_get_topic_level(dm_handle->sysdep, msg->data.pub.topic, msg->data.pub.topic_len, 3, &recv.device_name) < 0 ||
-            _dm_get_topic_level(dm_handle->sysdep, msg->data.pub.topic, msg->data.pub.topic_len, 6,
-                                &recv.data.async_service_invoke.service_id) < 0) {
+        if (_dm_get_topic_level(dm_handle->sysdep, msg->data.pub.topic, msg->data.pub.topic_len, 5, &recv.device_name) < 0) {
             break;
         }
         if ((_dm_parse_alink_request((char *)msg->data.pub.payload, msg->data.pub.payload_len,
-                                           &recv.data.async_service_invoke.msg_id,
-                                           &recv.data.async_service_invoke.params,
-                                           &recv.data.async_service_invoke.params_len)) < 0) {
+                                           &recv.data.service_down.msg_id,
+                                           &recv.data.service_down.params,
+                                           &recv.data.service_down.params_len)) < 0) {
 
             /* core_log(dm_handle->sysdep, SATAE_DM_LOG_PARSE_RECV_MSG_FAILED, "DM parse async servicey failed\r\n"); */
             break;
@@ -609,7 +644,6 @@ static void _dm_recv_async_service_invoke_handler(void *handle, const aiot_mqtt_
         dm_handle->recv_handler(dm_handle, &recv, dm_handle->userdata);
     } while (0);
 
-    DM_FREE(recv.product_key);
     DM_FREE(recv.device_name);
     DM_FREE(recv.data.async_service_invoke.service_id);
 }

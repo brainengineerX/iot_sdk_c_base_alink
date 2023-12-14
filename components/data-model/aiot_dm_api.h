@@ -648,7 +648,55 @@ typedef struct {
      * @brief 属性数据的字符串长度
      */
     uint32_t    params_len;
-} aiot_dm_recv_register_t;
+} aiot_xjtdm_recv_register_t;
+
+/**
+ * @brief <b>同步服务调用</b>消息结构体
+ */
+typedef struct {
+    /**
+     * @brief 消息标识符, uint64_t类型的整数
+     */
+    uint64_t    msg_id;
+    /**
+     * @brief 服务标示符, 字符串内容由用户定义的物模型决定
+     */
+    char       *identifier;
+    /**
+     * @brief 服务调用的输入参数数据, 为字符串形式的JSON结构体, 此字符串<b>不</b>以结束符'\0'结尾, 如<i>"{\"LightSwitch\":0}"</i>
+     */
+    char       *params;
+    /**
+     * @brief 输入参数的字符串长度
+     */
+    uint32_t    params_len;
+} aiot_xjtdm_recv_service_t;
+
+/**
+ * @brief <b>属性设置</b>消息结构体
+ */
+typedef struct {
+    /**
+     * @brief 消息标识符, uint64_t类型的整数
+     */
+    uint64_t    msg_id;
+    /**
+     * @brief 服务ID, uint64_t类型的整数
+     */
+    char    *serviceId;
+    /**
+     * @brief 设备端点ID, uint64_t类型的整数
+     */
+    char    *eid;
+    /**
+     * @brief 服务器下发的属性数据, 为字符串形式的JSON结构体, 此字符串<b>不</b>以结束符'\0'结尾, 如<i>"{\"LightSwitch\":0}"</i>
+     */
+    char       *params;
+    /**
+     * @brief 属性数据的字符串长度
+     */
+    uint32_t    params_len;
+} aiot_xjtdm_recv_property_set_t;
 
 /**
  * @brief data-model模块接收消息的结构体
@@ -677,9 +725,9 @@ typedef struct {
         aiot_dm_recv_raw_data_t             raw_data;
         aiot_dm_recv_raw_service_invoke_t   raw_service_invoke;
 
-        aiot_dm_recv_register_t             register_info;
-        
-
+        aiot_xjtdm_recv_register_t             register_info;
+        aiot_xjtdm_recv_service_t              service_down;
+        aiot_xjtdm_recv_property_set_t         xjt_property;
     } data;
 } aiot_dm_recv_t;
 
