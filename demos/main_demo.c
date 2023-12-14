@@ -285,7 +285,10 @@ static void demo_dm_recv_handler(void *dm_handle, const aiot_dm_recv_t *recv, vo
             demo_dm_recv_raw_data_reply(dm_handle, recv, userdata);
         }
         break;
-
+        /* 平台下发的注册消息*/
+        case AIOT_DMRECV_REGISTER_INFO: {
+            
+        }
         default:
             break;
     }

@@ -558,8 +558,7 @@ static void _dm_recv_property_set_handler(void *handle, const aiot_mqtt_recv_t *
     core_log(dm_handle->sysdep, STATE_DM_LOG_RECV, "DM recv property set\r\n");
 
     do {
-        if (_dm_get_topic_level(dm_handle->sysdep, msg->data.pub.topic, msg->data.pub.topic_len, 2, &recv.product_key) < 0 ||
-            _dm_get_topic_level(dm_handle->sysdep, msg->data.pub.topic, msg->data.pub.topic_len, 3, &recv.device_name) < 0) {
+        if (_dm_get_topic_level(dm_handle->sysdep, msg->data.pub.topic, msg->data.pub.topic_len, 5, &recv.device_name) < 0) {
             break;     /* must be malloc failed */
         }
 
@@ -574,7 +573,6 @@ static void _dm_recv_property_set_handler(void *handle, const aiot_mqtt_recv_t *
         dm_handle->recv_handler(dm_handle, &recv, dm_handle->userdata);
     } while (0);
 
-    DM_FREE(recv.product_key);
     DM_FREE(recv.device_name);
 }
 
