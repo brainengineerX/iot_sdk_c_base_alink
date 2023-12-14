@@ -53,6 +53,8 @@ extern "C" {
 #define XJT_JSON_KEY_SERVICE_ID         "serviceId"
 #define XJT_JSON_KEY_EID                "eid"
 #define XJT_JSON_KEY_PARAMS             "params"
+#define XJT_JSON_KEY_IDENTIFIER         "identifier"
+#define XJT_JSON_KEY_DATA               "data"
 
 /* 诊断消息类型 */
 #define DM_DIAG_MSG_TYPE_REQ            (0x00)
