@@ -207,6 +207,46 @@ typedef enum {
     AIOT_DMMSG_MAX,
 } aiot_dm_msg_type_t;
 
+typedef enum {
+    /**
+     * @brief 获取注册信息
+     *
+     */
+    AIOT_XJTDMMSG_GET_REGISTER_POST,
+    /**
+     * @brief 属性
+     *
+     */
+    AIOT_XJTDMMSG_PROPERTY_POST,
+
+    /**
+     * @brief 事件
+     *
+     */
+    AIOT_XJTDMMSG_EVENT_POST,
+
+    /**
+     * @brief 属性设置应答, 消息结构体参考@ref aiot_dm_msg_property_set_reply_t
+     */
+    AIOT_XJTDMMSG_PROPERTY_SET_REPLY,
+
+    /**
+     * @brief 服务应答, 消息结构体参考@ref aiot_dm_msg_async_service_reply_t
+     */
+    AIOT_XJTDMMSG_SERVICE_REPLY,
+
+    /**
+     * @brief 清除指定的期望值, 消息结构体请参考@ref aiot_dm_msg_delete_desired_t \n
+     * 成功发送此消息后, 将会收到@ref AIOT_DMRECV_GENERIC_REPLY 类型的应答消息
+     */
+    AIOT_XJTDMMSG_PROPERTY_BATCH_POST,
+
+    /**
+     * @brief 消息数量最大值, 不可用作消息类型
+     */
+    AIOT_XJTDMMSG_MAX,
+} aiot_xjtdm_msg_type_t;
+
 /**
  * @brief <b>物模型属性上报</b>消息结构体
  */
@@ -419,7 +459,7 @@ typedef struct {
     /**
      * @brief 消息类型, 可参考@ref aiot_dm_msg_type_t
      */
-    aiot_dm_msg_type_t type;
+    aiot_xjtdm_msg_type_t type;
     /**
      * @brief 消息数据联合体, 不同的消息类型将使用不同的消息结构体
      */

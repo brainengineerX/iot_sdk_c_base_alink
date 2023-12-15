@@ -21,7 +21,7 @@ static void _dm_recv_generic_reply_handler(void *handle, const aiot_mqtt_recv_t 
 static void _dm_recv_property_set_handler(void *handle, const aiot_mqtt_recv_t *msg, void *userdata);
 static void _dm_recv_async_service_invoke_handler(void *handle, const aiot_mqtt_recv_t *msg, void *userdata);
 
-static const dm_send_topic_map_t g_dm_send_topic_mapping[AIOT_DMMSG_MAX] = {
+static const dm_send_topic_map_t g_dm_send_topic_mapping[AIOT_XJTDMMSG_MAX] = {
     {
         "/v1/device/up/getDeviceInfo/%s",
         _dm_send_get_reg_post
@@ -121,40 +121,8 @@ static int32_t _dm_prepare_send_topic(dm_handle_t *dm_handle, const aiot_dm_msg_
 
     dn = (msg->device_name != NULL) ? msg->device_name : core_mqtt_get_device_name(dm_handle->mqtt_handle);
 
-    switch (msg->type) {
-        case AIOT_DMMSG_PROPERTY_POST:
-        case AIOT_DMMSG_PROPERTY_BATCH_POST:
-        case AIOT_DMMSG_PROPERTY_SET_REPLY:
-        case AIOT_DMMSG_GET_DESIRED:
-        case AIOT_DMMSG_DELETE_DESIRED:
-        case AIOT_DMMSG_RAW_DATA: {
-            src[0] = dn;
-            src_count = 1;
-        }
-        break;
-        case AIOT_DMMSG_EVENT_POST: {
-            src[0] = dn;
-            src_count = 1;
-        }
-        break;
-        case AIOT_DMMSG_ASYNC_SERVICE_REPLY: {
-            src[0] = dn;
-            src_count = 1;
-        }
-        break;
-        case AIOT_DMMSG_SYNC_SERVICE_REPLY: {
-            src[0] = dn;
-            src_count = 1;
-        }
-        break;
-        case AIOT_DMMSG_RAW_SERVICE_REPLY: {
-            src[0] = dn;
-            src_count = 1;
-        }
-        break;
-        default:
-            return STATE_USER_INPUT_OUT_RANGE;
-    }
+    src[0] = dn;
+    src_count = 1;
 
     return core_sprintf(dm_handle->sysdep, topic, g_dm_send_topic_mapping[msg->type].topic, src, src_count,
                         DATA_MODEL_MODULE_NAME);
@@ -759,7 +727,7 @@ int32_t aiot_dm_send(void *handle, const aiot_dm_msg_t *msg)
         return STATE_USER_INPUT_NULL_POINTER;
     }
 
-    if (msg->type >= AIOT_DMMSG_MAX) {
+    if (msg->type >= AIOT_XJTDMMSG_MAX) {
         return STATE_USER_INPUT_OUT_RANGE;
     }
 
