@@ -8,11 +8,11 @@
 #include "aiot_mqtt_api.h"
 #include "aiot_ota_api.h"
 #include "aiot_dm_api.h"
+#include "md5.h"
 
-
-char *username          = "username_*******";
-char *password          = "password_*******";
-char *client_id         = "client_*******";
+char *username          = "";
+char *password          = "";
+char *client_id         = "";
 const char *device_name       = "device00011";
 
 /*
@@ -300,7 +300,7 @@ int32_t demo_send_property_post(void *dm_handle, char *params)
     aiot_dm_msg_t msg;
 
     memset(&msg, 0, sizeof(aiot_dm_msg_t));
-    msg.type = AIOT_DMMSG_PROPERTY_POST;
+    msg.type = AIOT_XJTDMMSG_PROPERTY_POST;
     msg.data.property_post.params = params;
 
     return aiot_dm_send(dm_handle, &msg);
@@ -311,7 +311,7 @@ int32_t demo_send_property_batch_post(void *dm_handle, char *params)
     aiot_dm_msg_t msg;
 
     memset(&msg, 0, sizeof(aiot_dm_msg_t));
-    msg.type = AIOT_DMMSG_PROPERTY_BATCH_POST;
+    msg.type = AIOT_XJTDMMSG_PROPERTY_BATCH_POST;
     msg.data.property_post.params = params;
 
     return aiot_dm_send(dm_handle, &msg);
@@ -323,33 +323,9 @@ int32_t demo_send_event_post(void *dm_handle, char *event_id, char *params)
     aiot_dm_msg_t msg;
 
     memset(&msg, 0, sizeof(aiot_dm_msg_t));
-    msg.type = AIOT_DMMSG_EVENT_POST;
+    msg.type = AIOT_XJTDMMSG_EVENT_POST;
     msg.data.event_post.event_id = event_id;
     msg.data.event_post.params = params;
-
-    return aiot_dm_send(dm_handle, &msg);
-}
-
-/* 演示了获取属性LightSwitch的期望值, 用户可将此函数加入到main函数中运行演示 */
-int32_t demo_send_get_desred_requset(void *dm_handle)
-{
-    aiot_dm_msg_t msg;
-
-    memset(&msg, 0, sizeof(aiot_dm_msg_t));
-    msg.type = AIOT_DMMSG_GET_DESIRED;
-    msg.data.get_desired.params = "[\"LightSwitch\"]";
-
-    return aiot_dm_send(dm_handle, &msg);
-}
-
-/* 演示了删除属性LightSwitch的期望值, 用户可将此函数加入到main函数中运行演示 */
-int32_t demo_send_delete_desred_requset(void *dm_handle)
-{
-    aiot_dm_msg_t msg;
-
-    memset(&msg, 0, sizeof(aiot_dm_msg_t));
-    msg.type = AIOT_DMMSG_DELETE_DESIRED;
-    msg.data.get_desired.params = "{\"LightSwitch\":{}}";
 
     return aiot_dm_send(dm_handle, &msg);
 }
@@ -383,7 +359,22 @@ int main(int argc, char *argv[])
     aiot_mqtt_setopt(mqtt_handle, AIOT_MQTTOPT_HOST, (void *)mqtt_host);
     /* 配置MQTT服务器端口 */
     aiot_mqtt_setopt(mqtt_handle, AIOT_MQTTOPT_PORT, (void *)&port);
-        /* 配置设备username */
+    if (strlen(username) == 0)
+    {
+        sprintf(username,"user_%s",device_name);
+    }
+
+    if (strlen(client_id) == 0)
+    {
+        sprintf(client_id,"client_%s",device_name);
+    }
+    if (strlen(password) == 0)
+    {
+        char xjt_password[100] = {0};
+        sprintf(xjt_password,"identify:%s",device_name);
+        Md5GenerateStr(xjt_password, strlen(xjt_password), password);
+    }
+    /* 配置设备username */
     aiot_mqtt_setopt(mqtt_handle, AIOT_MQTTOPT_USERNAME, (void *)username);
     /* 配置设备password */
     aiot_mqtt_setopt(mqtt_handle, AIOT_MQTTOPT_PASSWORD, (void *)password);
